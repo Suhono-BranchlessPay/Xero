@@ -1,28 +1,24 @@
 #!/usr/bin/env node
 /**
- * Preview Wave verify-page mapping for M3+M4 QA.
- * Usage: node scripts/preview_verify.mjs [fixture.json]
+ * Preview Xero verify-page mapping for M3+M4 QA.
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { isWaveAnchor, mapWaveVerifyPage } from "../src/waveVerifyMapping.ts";
+import { isXeroAnchor, mapXeroVerifyPage } from "../src/xeroVerifyMapping.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(__dirname, "..", "fixtures");
 
 function preview(anchor, label) {
-  if (!isWaveAnchor(anchor)) {
-    console.log(`SKIP ${label}: not a Wave anchor`);
+  if (!isXeroAnchor(anchor)) {
+    console.log(`SKIP ${label}: not a Xero anchor`);
     return;
   }
-  const page = mapWaveVerifyPage(anchor);
+  const page = mapXeroVerifyPage(anchor);
   console.log(`\n=== ${label} ===`);
-  if (anchor.verify_url) {
-    console.log(`Verify: ${anchor.verify_url}`);
-  }
-  console.log("\nBusiness Information");
+  console.log("\nOrganisation Information");
   for (const row of page.businessRows) {
     console.log(`  ${row.label}: ${row.value}`);
   }
@@ -31,17 +27,17 @@ function preview(anchor, label) {
     console.log(`  ${row.label}: ${row.value}`);
   }
   console.log(`\nStatus badge: ${page.statusBadge.label} (${page.statusBadge.variant})`);
-  console.log(`\nInstructions: ${page.instructions}`);
 }
 
-const arg = process.argv[2];
-const files = arg
-  ? [arg.endsWith(".json") ? arg : join(fixturesDir, arg)]
-  : readdirSync(fixturesDir)
-      .filter((f) => f.endsWith(".json"))
-      .map((f) => join(fixturesDir, f));
+if (!existsSync(fixturesDir)) {
+  console.log("No fixtures yet — add JSON files to display/fixtures/ after live E2E.");
+  process.exit(0);
+}
+
+const files = readdirSync(fixturesDir)
+  .filter((f) => f.endsWith(".json"))
+  .map((f) => join(fixturesDir, f));
 
 for (const file of files) {
-  const anchor = JSON.parse(readFileSync(file, "utf8"));
-  preview(anchor, anchor.anchor_id ?? file);
+  preview(JSON.parse(readFileSync(file, "utf8")), file);
 }

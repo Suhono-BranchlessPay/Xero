@@ -1,83 +1,60 @@
 # M4 — Verify Page Integration Guide
 
-For BranchlessPay `VerifyPage.tsx` merge.
+For BranchlessPay `VerifyPage.tsx` merge (same pattern as Wave commit `770f391`).
 
 ---
 
-## 1. Detect Wave anchors
+## 1. Detect Xero anchors
 
 ```typescript
-import { isWaveAnchor } from "./integrations/wave/waveVerifyMapping";
+import { isXeroAnchor } from "./integrations/xero/xeroVerifyMapping";
 
-if (isWaveAnchor(anchorRecord)) {
-  return <WaveVerifySections anchor={anchorRecord} />;
+if (isXeroAnchor(anchorRecord)) {
+  return <XeroVerifySections anchor={anchorRecord} />;
 }
 ```
 
 ---
 
-## 2. Drop-in component
+## 2. Drop-in files
 
-Copy from this repo:
+- `display/src/xeroVerifyMapping.ts`
+- `display/src/VerifyPageIntegration.example.tsx`
 
-- `display/src/waveVerifyMapping.ts` — pure mapping (no React deps)
-- `display/src/VerifyPageIntegration.example.tsx` — React sections
-
-Or use the single helper:
+Or use:
 
 ```typescript
-import { mapWaveVerifyPage } from "./integrations/wave/waveVerifyMapping";
+import { mapXeroVerifyPage } from "./integrations/xero/xeroVerifyMapping";
 
 const { businessRows, transactionRows, statusBadge, instructions, pdfFields } =
-  mapWaveVerifyPage(anchor);
+  mapXeroVerifyPage(anchor);
 ```
 
 ---
 
-## 3. CSS badge variants
+## 3. ERP display label
 
-| Variant | Wave status | Suggested color |
-|---------|-------------|-----------------|
-| `unpaid` | UNPAID | blue |
-| `paid` | PAID | green |
-| `overdue` | OVERDUE | red |
-| `draft` | DRAFT | grey |
-| `partial` | PARTIAL | yellow |
-| `saved` | SAVED | grey |
-| `sent` | SENT, VIEWED | blue |
+`ERP_DISPLAY_LABEL = "Xero"` — matches BP merged Wave pattern (`"Wave"` not `"Wave Accounting"`).
 
 ---
 
-## 4. Sample verify URLs (QA)
+## 4. Status badges
 
-| Event | URL |
-|-------|-----|
-| `invoice.created` | https://branchlesspay.com/verify/9d938e0d-e64d-44da-91fd-1345e2ab60a4 |
-| `payment.created` | https://branchlesspay.com/verify/587583dd-ef70-47c8-8c6f-ed4480e46ba1 |
+| Variant | Xero status |
+|---------|-------------|
+| `draft` | DRAFT |
+| `sent` | SUBMITTED |
+| `unpaid` | AUTHORISED |
+| `paid` | PAID |
+| `partial` | PARTIAL |
 
-Fixtures matching these anchors: `display/fixtures/`
+---
 
-Preview locally:
+## 5. Tests
 
 ```powershell
 cd display
-node --experimental-strip-types scripts/preview_verify.mjs
 npm test
 ```
-
----
-
-## 5. PDF evidence export
-
-Use `buildPdfEvidenceFields(anchor)` for audit PDF footer:
-
-- `documentNumber`, `clientName`, `dueDate`, `documentType`, `amountFormatted`, `currency`
-
----
-
-## 6. Pending BP platform
-
-- Merge `WaveVerifySections` into production `VerifyPage.tsx`
-- Pass full anchor payload (including `metadata`) from GET anchor API to verify page renderer
 
 Contact: suhono@branchlesspay.com
