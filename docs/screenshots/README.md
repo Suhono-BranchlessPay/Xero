@@ -11,11 +11,18 @@ Save verify-page screenshots here after live anchor E2E.
 
 | File | Event | Live sample |
 |------|-------|-------------|
-| `m3m4-inv-0003.png` | `xero_invoice_created` | INV-0003 / BP-E2E-20260613-060015 |
-| `m3m4-inv-0002.png` | `xero_invoice_created` | INV-0002 / $21 noodle ramen |
-| `m3m4-inv-updated.png` | `xero_invoice_updated` | TBD |
-| `m3m4-payment.png` | `xero_payment_received` | TBD |
-| `m3m4-transaction.png` | `xero_transaction_recorded` | TBD |
+| `m3m4-inv-0003.png` | `xero_invoice_created` | INV-0003 ✅ |
+| `m3m4-inv-0002.png` | `xero_invoice_created` | INV-0002 ✅ |
+| `m3m4-inv-0001.png` | `xero_invoice_created` | INV-0001 ✅ |
+| `m3m4-inv-updated.png` | `xero_invoice_updated` | INV-0002 update ✅ |
+| `m3m4-payment.png` | `xero_payment_received` | TBD (no live anchor yet) |
+| `m3m4-transaction.png` | `xero_transaction_recorded` | TBD (no live anchor yet) |
+
+Regenerate:
+
+```powershell
+python scripts/capture_verify_screenshots.py
+```
 
 ## Expected M3 display (pre-enrichment)
 

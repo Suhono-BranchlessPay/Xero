@@ -26,7 +26,7 @@ Repo: https://github.com/Suhono-BranchlessPay/Xero · branch **`dev`**
 | Live fixtures (INV-0001/0002/0003) | ✅ |
 | BP `VerifyPage.tsx` merge | ✅ (`db11427`) |
 | Enriched amounts on verify page | ✅ (`7f3f7e6`) |
-| Verify page screenshots | ⏳ Add PNGs to `docs/screenshots/` |
+| Verify page screenshots | ✅ `docs/screenshots/` (INV-0001/0002/0003 + updated) |
 
 Run: `cd display && npm test`
 
