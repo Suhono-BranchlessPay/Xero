@@ -118,14 +118,30 @@ def test_webhook_pipeline_all_events(mock_post, mock_fetch, mock_idem_cls, event
     assert body["results"][0]["anchor_id"]
 
 
-def test_intent_to_receive_returns_signature():
-    app = create_app(_settings())
+def test_intent_to_receive_returns_200_on_valid_signature():
+    app = create_app(_settings(skip_signature_verify=False))
+    client = app.test_client()
+    raw = '{"events":[],"firstEventSequence":0,"lastEventSequence":0,"entropy":"abc"}'
+    from xero_bp_collector.signature import compute_signature
+
+    sig = compute_signature("xero_test_key", raw)
+    response = client.post(
+        "/webhook/xero",
+        data=raw,
+        content_type="application/json",
+        headers={"x-xero-signature": sig},
+    )
+    assert response.status_code == 200
+
+
+def test_intent_to_receive_returns_401_on_invalid_signature():
+    app = create_app(_settings(skip_signature_verify=False))
     client = app.test_client()
     raw = '{"events":[],"firstEventSequence":0,"lastEventSequence":0,"entropy":"abc"}'
     response = client.post(
         "/webhook/xero",
         data=raw,
         content_type="application/json",
+        headers={"x-xero-signature": "invalid"},
     )
-    assert response.status_code == 200
-    assert len(response.get_data(as_text=True)) > 10
+    assert response.status_code == 401

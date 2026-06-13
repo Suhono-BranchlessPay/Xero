@@ -22,8 +22,11 @@ Repo: https://github.com/Suhono-BranchlessPay/Xero · branch **`dev`**
 |-------------|--------|
 | Missing field handling | ✅ |
 | PDF evidence builder | ✅ |
-| Verification instructions | ✅ |
-| BP `VerifyPage.tsx` merge | ⏳ Pending BP (pattern from Wave commit 770f391) |
+| Verification instructions | ✅ (+ enrichment pending note) |
+| Live fixtures (INV-0001/0002/0003) | ✅ |
+| BP `VerifyPage.tsx` merge | ✅ (`db11427`) |
+| Enriched amounts on verify page | ✅ (`7f3f7e6`) |
+| Verify page screenshots | ⏳ Add PNGs to `docs/screenshots/` |
 
 Run: `cd display && npm test`
 

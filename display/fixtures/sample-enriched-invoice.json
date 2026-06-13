@@ -1,0 +1,18 @@
+{
+  "event_type": "xero_invoice_created",
+  "reference_id": "INV-0001",
+  "amount": 125,
+  "currency": "USD",
+  "voucher_date": "2026-06-13",
+  "timestamp": "2026-06-13T04:00:00Z",
+  "metadata": {
+    "erp": "xero",
+    "business_name": "Branchlesspay",
+    "business_address": "789 E Morgan St, Martinsville, IN 46151",
+    "contact_name": "BranchlessPay E2E Test",
+    "invoice_number": "INV-0001",
+    "status": "AUTHORISED",
+    "due_date": "2026-07-13",
+    "amount_enriched": true
+  }
+}

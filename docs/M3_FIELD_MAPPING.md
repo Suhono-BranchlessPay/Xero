@@ -26,7 +26,7 @@ Detect Xero anchors: `metadata.erp === "xero"` or `event_type.startsWith("xero_"
 | Reference | `reference_id` | Bank transaction |
 | Date | `voucher_date` / `payment_date` / `transaction_date` | Event-specific |
 | Due Date | `metadata.due_date` | Invoice events only |
-| Amount | `amount` + `currency` | USD/CAD/AUD/NZD/GBP |
+| Amount | `amount` + `currency` | Shows `$0.00 (pending enrichment)` until BP worker syncs |
 | Status | `metadata.status` | Hidden for bank transactions |
 
 ---
@@ -39,6 +39,7 @@ Detect Xero anchors: `metadata.erp === "xero"` or `event_type.startsWith("xero_"
 | `xero_invoice_updated` | Xero Invoice (Updated) |
 | `xero_payment_received` | Xero Payment |
 | `xero_transaction_recorded` | Xero Bank Transaction |
+| `xero_creditnote_created` | Xero Credit Note |
 
 ---
 

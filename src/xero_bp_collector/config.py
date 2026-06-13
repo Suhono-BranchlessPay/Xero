@@ -5,7 +5,10 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+_PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+load_dotenv(os.path.join(_PROJECT_ROOT, ".env"), override=True)
 
 
 @dataclass(frozen=True)
@@ -27,9 +30,7 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    root = os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )
+    root = _PROJECT_ROOT
     return Settings(
         bp_license_key=os.getenv("BP_LICENSE_KEY", "").strip(),
         bp_api_url=os.getenv(

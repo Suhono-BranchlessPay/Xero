@@ -1,0 +1,22 @@
+{
+  "event_type": "xero_invoice_created",
+  "reference_id": "xero_6a74d133-300c-4890-b118-4e071086e57a_create",
+  "amount": 0,
+  "currency": "USD",
+  "timestamp": "2026-06-13T05:27:22.403Z",
+  "metadata": {
+    "erp": "xero",
+    "vendor": "xero",
+    "xero_tenant_id": "d85c09ba-b286-4c3c-b1ff-157c5ae02246",
+    "resource_id": "6a74d133-300c-4890-b118-4e071086e57a",
+    "event_type": "CREATE",
+    "event_category": "INVOICE",
+    "business_name": "Branchlesspay",
+    "business_address": "789 E Morgan St, Martinsville, IN 46151",
+    "invoice_number": "INV-0001",
+    "contact_name": "BranchlessPay E2E Test",
+    "status": "AUTHORISED",
+    "document_type": "Invoice",
+    "xero_id": "6a74d133-300c-4890-b118-4e071086e57a"
+  }
+}

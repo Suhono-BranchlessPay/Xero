@@ -11,11 +11,7 @@ from .config import get_settings
 from .idempotency import AnchorIdempotencyStore
 from .normalizer import normalize_to_bp_payload
 from .queue_store import FailedQueue
-from .signature import (
-    get_signature_header,
-    intent_to_receive_response,
-    verify_signature,
-)
+from .signature import get_signature_header, verify_signature
 from .webhook_parser import ANCHOR_EVENTS, is_intent_to_receive, parse_webhook_events
 from .xero_client import XeroClient
 
@@ -48,6 +44,25 @@ def create_app(settings=None) -> Flask:
 def _handle_webhook(req: Request, settings) -> tuple[Any, int]:
     raw_body = req.get_data(cache=True)
 
+    try:
+        body = json.loads(raw_body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        _logger.warning("Webhook received invalid JSON")
+        return jsonify({"ok": False, "error": "invalid json"}), 400
+
+    # Intent-to-receive: Xero POSTs a signed payload with empty events[].
+    # Verify x-xero-signature on the raw body; return 200 if valid, 401 if not.
+    if is_intent_to_receive(body) or not body.get("events"):
+        if not settings.xero_webhook_key:
+            _logger.error("XERO_WEBHOOK_KEY not configured for intent-to-receive")
+            return jsonify({"ok": False, "error": "webhook key not configured"}), 503
+        signature_header = get_signature_header(req.headers)
+        if verify_signature(settings.xero_webhook_key, raw_body, signature_header):
+            _logger.info("Xero intent-to-receive signature OK -> 200")
+            return "", 200
+        _logger.warning("Xero intent-to-receive signature invalid -> 401")
+        return "", 401
+
     if not settings.skip_signature_verify and settings.xero_webhook_key:
         signature_header = get_signature_header(req.headers)
         if not verify_signature(settings.xero_webhook_key, raw_body, signature_header):
@@ -55,17 +70,6 @@ def _handle_webhook(req: Request, settings) -> tuple[Any, int]:
             return jsonify({"ok": False, "error": "unauthorized"}), 401
     elif settings.skip_signature_verify:
         _logger.warning("Signature verification skipped (dev mode)")
-
-    try:
-        body = json.loads(raw_body.decode("utf-8") or "{}")
-    except json.JSONDecodeError:
-        return jsonify({"ok": False, "error": "invalid json"}), 400
-
-    if is_intent_to_receive(body) or not body.get("events"):
-        if settings.xero_webhook_key:
-            hashed = intent_to_receive_response(settings.xero_webhook_key, raw_body)
-            return hashed, 200, {"Content-Type": "text/plain"}
-        return jsonify({"ok": True, "verification": "intent"}), 200
 
     try:
         events = parse_webhook_events(body)

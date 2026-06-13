@@ -38,6 +38,8 @@ export interface XeroAnchorMetadata {
   payment_date?: string | null;
   transaction_date?: string | null;
   xero_event?: string | null;
+  xero_id?: string | null;
+  amount_enriched?: boolean | null;
 }
 
 export interface XeroAnchorRecord {
@@ -89,6 +91,7 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
   xero_invoice_updated: "Xero Invoice (Updated)",
   xero_payment_received: "Xero Payment",
   xero_transaction_recorded: "Xero Bank Transaction",
+  xero_creditnote_created: "Xero Credit Note",
 };
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -120,8 +123,9 @@ const SUPPORTED_CURRENCIES = new Set(["USD", "CAD", "AUD", "NZD", "GBP"]);
 
 export function isXeroAnchor(anchor: XeroAnchorRecord): boolean {
   const erp = anchor.metadata?.erp?.toLowerCase();
+  const vendor = (anchor.metadata as { vendor?: string } | undefined)?.vendor?.toLowerCase();
   const eventType = anchor.event_type ?? "";
-  return erp === "xero" || eventType.startsWith("xero_");
+  return erp === "xero" || vendor === "xero" || eventType.startsWith("xero_");
 }
 
 export function displayOrDash(value: string | null | undefined): string {
@@ -151,6 +155,21 @@ export function formatCurrency(amount: number, currency = "USD"): string {
     default:
       return `${code} ${fixed}`;
   }
+}
+
+/** BP webhook anchors may show amount=0 until xeroEnrichmentWorker runs. */
+export function formatAmountForDisplay(anchor: XeroAnchorRecord): string {
+  const amount = anchor.amount ?? 0;
+  const currency = anchor.currency ?? "USD";
+  const formatted = formatCurrency(amount, currency);
+  if (amount === 0 && !anchor.metadata?.amount_enriched) {
+    return `${formatted} (pending enrichment)`;
+  }
+  return formatted;
+}
+
+export function isAmountPendingEnrichment(anchor: XeroAnchorRecord): boolean {
+  return (anchor.amount ?? 0) === 0 && !anchor.metadata?.amount_enriched;
 }
 
 export function formatDisplayDate(value: string | null | undefined): string {
@@ -208,7 +227,12 @@ export function getReferenceId(anchor: XeroAnchorRecord): string {
   if (metadata.invoice_number) {
     return displayOrDash(metadata.invoice_number);
   }
-  return displayOrDash(anchor.reference_id);
+  const ref = anchor.reference_id ?? "";
+  const resourceId = (metadata as { resource_id?: string }).resource_id;
+  if (ref.startsWith("xero_") && resourceId) {
+    return displayOrDash(resourceId);
+  }
+  return displayOrDash(ref);
 }
 
 export function getTransactionDate(anchor: XeroAnchorRecord): string {
@@ -292,7 +316,7 @@ export function mapTransactionSection(anchor: XeroAnchorRecord): VerifyRow[] {
 
   rows.push({
     label: "Amount",
-    value: formatCurrency(anchor.amount ?? 0, anchor.currency ?? "USD"),
+    value: formatAmountForDisplay(anchor),
   });
 
   if (shouldShowStatus(anchor)) {
@@ -307,13 +331,23 @@ export function buildVerificationInstructions(anchor: XeroAnchorRecord): string 
   const metadata = anchor.metadata ?? {};
   const documentType = metadata.document_type ?? "document";
   const timestamp = formatDisplayDate(anchor.timestamp);
-  const tenantId = displayOrDash(metadata.tenant_id ?? anchor.tenant_id);
+  const tenantId = displayOrDash(
+    metadata.tenant_id ??
+      (metadata as { xero_tenant_id?: string }).xero_tenant_id ??
+      anchor.tenant_id,
+  );
   const eventLabel = getEventTypeLabel(anchor.event_type);
 
-  return (
+  let instructions =
     `This ${eventLabel} (${documentType}) from Xero was anchored to the Monad blockchain on ${timestamp}. ` +
-    `Original record in Xero organisation ${tenantId}. Verify the content hash and transaction hash below.`
-  );
+    `Original record in Xero organisation ${tenantId}. Verify the content hash and transaction hash below.`;
+
+  if (isAmountPendingEnrichment(anchor)) {
+    instructions +=
+      " Transaction amount is pending Xero API enrichment and may show as $0.00 until sync completes.";
+  }
+
+  return instructions;
 }
 
 export function buildPdfEvidenceFields(anchor: XeroAnchorRecord): PdfEvidenceFields {
@@ -330,7 +364,7 @@ export function buildPdfEvidenceFields(anchor: XeroAnchorRecord): PdfEvidenceFie
     documentType: displayOrDash(
       metadata.document_type ?? getEventTypeLabel(anchor.event_type),
     ),
-    amountFormatted: formatCurrency(anchor.amount ?? 0, safeCurrency),
+    amountFormatted: formatAmountForDisplay(anchor),
     currency: safeCurrency,
   };
 }
